@@ -169,7 +169,7 @@ while true do
                     local teleportAbovePosition = targetButtonPosition + TELEPORT_OFFSET
                     humanoidRootPart.CFrame = CFrame.new(teleportAbovePosition)
                     print(string.format("ButtonTierTeleporter (MultiTP V3): Teleporting above INCOMPLETE tier's highest Neon: %s %s", tierName, targetTeleportPart.Parent.Name))
-                    task.wait(2)
+                    task.wait(LOOP_DELAY)
                     humanoidRootPart.CFrame = humanoidRootPart.CFrame + MOVE_ASIDE_OFFSET
                     print("ButtonTierTeleporter (MultiTP V3): Moved aside.")
                     task.wait(POST_TELEPORT_DELAY)
@@ -192,7 +192,7 @@ while true do
                 humanoidRootPart.CFrame = CFrame.new(teleportAbovePosition)
                 -- Use lastButtonTouch.Parent.Name which should be the button number model's name
                 print(string.format("ButtonTierTeleporter (MultiTP V3): Teleporting above COMPLETED tier's last button: %s %s", tierName, lastButtonTouch.Parent.Name))
-
+                task.wait(LOOP_DELAY)
                 humanoidRootPart.CFrame = humanoidRootPart.CFrame + MOVE_ASIDE_OFFSET
                 print("ButtonTierTeleporter (MultiTP V3): Moved aside.")
                 task.wait(POST_TELEPORT_DELAY)
