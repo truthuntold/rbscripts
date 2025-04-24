@@ -12,7 +12,7 @@ local BUTTON_TIERS = {
 }
 local BUTTONS_PARENT_FOLDER_PATH = "Buttons" -- Relative path within Workspace
 local MAX_BUTTON_NUMBER_TO_CHECK = 16 -- <<<< MAKE SURE THIS IS >= HIGHEST BUTTON # (e.g., 15 for Hyper) >>>>
-local TELEPORT_OFFSET = Vector3.new(0, 3, 0) -- How high above the button to teleport
+local TELEPORT_OFFSET = Vector3.new(0, 1, 0) -- How high above the button to teleport
 local MOVE_ASIDE_OFFSET = Vector3.new(3, 0, 3) -- << How far to move sideways after TP (World X, Y, Z) >>
 local POST_TELEPORT_DELAY = 0.1 -- << Short delay AFTER teleporting to allow tier rebuild (seconds) >>
 local LOOP_DELAY = .3 -- Seconds between the START of each full tier scan
@@ -169,7 +169,7 @@ while true do
                     local teleportAbovePosition = targetButtonPosition + TELEPORT_OFFSET
                     humanoidRootPart.CFrame = CFrame.new(teleportAbovePosition)
                     print(string.format("ButtonTierTeleporter (MultiTP V3): Teleporting above INCOMPLETE tier's highest Neon: %s %s", tierName, targetTeleportPart.Parent.Name))
-                    task.wait(POST_TELEPORT_DELAY)
+                    task.wait(LOOP_DELAY)
                     humanoidRootPart.CFrame = humanoidRootPart.CFrame + MOVE_ASIDE_OFFSET
                     print("ButtonTierTeleporter (MultiTP V3): Moved aside.")
                     task.wait(POST_TELEPORT_DELAY)
