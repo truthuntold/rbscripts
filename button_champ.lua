@@ -8,8 +8,11 @@ local UserInputService = game:GetService("UserInputService")
 local BUTTON_TIERS = {
     "Multiplier", "Rebirth", "Ultra", "Omega", "Insane",
     "Extreme", "Hyper", "Godly", "Supreme", "Cyber",
-    "Hologram", "Sakura"
+    "Hologram"
 }
+
+-- , "Sakura"
+
 local BUTTONS_PARENT_FOLDER_PATH = "Buttons" -- Relative path within Workspace
 local MAX_BUTTON_NUMBER_TO_CHECK = 15 -- <<<< MAKE SURE THIS IS >= HIGHEST BUTTON # (e.g., 15 for Hyper) >>>>
 local TELEPORT_OFFSET = Vector3.new(0, 5, 0) -- How high above the button to teleport
