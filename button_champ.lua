@@ -11,10 +11,12 @@ local BUTTON_TIERS = {
     "Hologram", "Sakura"
 }
 local BUTTONS_PARENT_FOLDER_PATH = "Buttons" -- Relative path within Workspace
-local MAX_BUTTON_NUMBER_TO_CHECK = 16 -- <<<< MAKE SURE THIS IS >= HIGHEST BUTTON # (e.g., 15 for Hyper) >>>>
-local TELEPORT_OFFSET = Vector3.new(0, 3, 0) -- How high above the button to teleport
-local LOOP_DELAY = .3 -- Seconds between the START of each full tier scan
-local GUI_NAME = "ButtonTierTeleporterGui_MultiTP" -- Unique name for the GUI (changed slightly)
+local MAX_BUTTON_NUMBER_TO_CHECK = 15 -- <<<< MAKE SURE THIS IS >= HIGHEST BUTTON # (e.g., 15 for Hyper) >>>>
+local TELEPORT_OFFSET = Vector3.new(0, 5, 0) -- How high above the button to teleport
+local MOVE_ASIDE_OFFSET = Vector3.new(2, 0, 1) -- << How far to move sideways after TP (World X, Y, Z) >>
+local POST_TELEPORT_DELAY = 0.1 -- << Short delay AFTER teleporting to allow tier rebuild (seconds) >>
+local LOOP_DELAY = 1 -- Seconds between the START of each full tier scan
+local GUI_NAME = "ButtonTierTeleporter_MultiTP_V2" -- Unique name for the GUI (updated)
 
 -- Player Variables
 local player = Players.LocalPlayer
@@ -28,11 +30,11 @@ local isEnabled = false
 -- ====================================================
 local oldGui = playerGui:FindFirstChild(GUI_NAME)
 if oldGui then
-    print("ButtonTierTeleporter (MultiTP): Cleaning up previous GUI instance.")
+    print("ButtonTierTeleporter (MultiTP V2): Cleaning up previous GUI instance.")
     oldGui:Destroy()
     task.wait()
 end
-print("ButtonTierTeleporter (MultiTP): Initializing script...")
+print("ButtonTierTeleporter (MultiTP V2): Initializing script...")
 
 -- ====================================================
 -- GUI Setup (Create Fresh)
@@ -44,7 +46,7 @@ screenGui.Parent = playerGui
 
 local toggleButton = Instance.new("TextButton")
 toggleButton.Name = "ToggleButton"
-toggleButton.Text = "Auto Multi-TP: OFF" -- Updated text
+toggleButton.Text = "Auto Multi-TP: OFF"
 toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Size = UDim2.new(0, 150, 0, 50)
@@ -62,7 +64,7 @@ local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
-    print("ButtonTierTeleporter (MultiTP): Updated character references.")
+    print("ButtonTierTeleporter (MultiTP V2): Updated character references.")
 end)
 
 
@@ -72,9 +74,9 @@ end)
 toggleButton.MouseButton1Click:Connect(function()
     isEnabled = not isEnabled
     if isEnabled then
-        toggleButton.Text = "Auto Multi-TP: ON" -- Updated text
+        toggleButton.Text = "Auto Multi-TP: ON"
         toggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-        print("ButtonTierTeleporter (MultiTP): Enabled")
+        print("ButtonTierTeleporter (MultiTP V2): Enabled")
         if not humanoidRootPart or not humanoidRootPart.Parent then
              character = player.Character
              if character then
@@ -82,9 +84,9 @@ toggleButton.MouseButton1Click:Connect(function()
              end
         end
     else
-        toggleButton.Text = "Auto Multi-TP: OFF" -- Updated text
+        toggleButton.Text = "Auto Multi-TP: OFF"
         toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        print("ButtonTierTeleporter (MultiTP): Disabled")
+        print("ButtonTierTeleporter (MultiTP V2): Disabled")
     end
 end)
 
@@ -106,98 +108,105 @@ end
 -- ====================================================
 -- Main Loop (Checks ALL tiers every cycle)
 -- ====================================================
-print("ButtonTierTeleporter (MultiTP): Starting main loop.")
+print("ButtonTierTeleporter (MultiTP V2): Starting main loop.")
 while true do
+    -- Main delay between full scans
     local waitTime = isEnabled and LOOP_DELAY or 1
     task.wait(waitTime)
 
+    -- Only run if enabled
     if not isEnabled then
         continue
     end
 
+    -- Validate character and HumanoidRootPart
     if not character or not character.Parent then
         character = player.Character
-        if not character then
-            continue
-        end
+        if not character then continue end
     end
-
     if not humanoidRootPart or not humanoidRootPart.Parent then
         humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-        if not humanoidRootPart then
-             continue
-        end
+        if not humanoidRootPart then continue end
     end
 
+    -- Find buttons folder
     local buttonsParentFolder = Workspace:FindFirstChild(BUTTONS_PARENT_FOLDER_PATH)
     if not buttonsParentFolder then
-        warn("ButtonTierTeleporter (MultiTP): Main 'Buttons' folder not found in Workspace yet.")
+        warn("ButtonTierTeleporter (MultiTP V2): Main 'Buttons' folder not found in Workspace yet.")
         continue
     end
 
-    local actionTakenThisCycle = false -- Tracks if any TP or identification happened
+    local actionTakenThisCycle = false
 
     -- Iterate through ALL defined tiers in THIS cycle
     for _, tierName in ipairs(BUTTON_TIERS) do
         local tierFolder = buttonsParentFolder:FindFirstChild(tierName)
-
-        if not tierFolder then
-            continue -- Skip to the next tier
-        end
+        if not tierFolder then continue end -- Skip if tier folder doesn't exist
 
         local lastButtonNum = findLastButtonNumber(tierFolder)
-        if lastButtonNum == 0 then
-            continue -- Skip if no numbered buttons found
-        end
+        if lastButtonNum == 0 then continue end -- Skip if no numbered buttons
 
         local lastButton = tierFolder:FindFirstChild(tostring(lastButtonNum))
         local lastButtonTouch = lastButton and lastButton:FindFirstChild("Touch")
 
         -- Check if the tier is incomplete
         if lastButtonTouch and lastButtonTouch.Material == Enum.Material.Plastic then
-            -- Tier is incomplete, find the highest Neon button in this tier
+            actionTakenThisCycle = true -- Mark action needed for this tier
+
+            -- Find the highest Neon button
             local targetTeleportPart = nil
             for buttonNum = lastButtonNum - 1, 1, -1 do
                 local currentButton = tierFolder:FindFirstChild(tostring(buttonNum))
                 local currentTouch = currentButton and currentButton:FindFirstChild("Touch")
-
                 if currentTouch and currentTouch.Material == Enum.Material.Neon then
                     targetTeleportPart = currentTouch
-                    break -- Found the highest NEON, stop searching *within this tier*
+                    break -- Found highest Neon in this tier
                 end
             end
 
-            -- If we found a Neon button to teleport to in this tier
+            -- If we found a Neon button to teleport to
             if targetTeleportPart then
                  if humanoidRootPart and humanoidRootPart.Parent then
-                    local targetPosition = targetTeleportPart.Position + TELEPORT_OFFSET
-                    humanoidRootPart.CFrame = CFrame.new(targetPosition)
-                    print("ButtonTierTeleporter (MultiTP): Teleporting to:", tierName, targetTeleportPart.Parent.Name)
-                    actionTakenThisCycle = true
-                    -- << NO BREAK HERE >> -- Allows checking subsequent tiers in the same cycle
+                    -- 1. Teleport slightly above the target button
+                    local targetButtonPosition = targetTeleportPart.Position
+                    local teleportAbovePosition = targetButtonPosition + TELEPORT_OFFSET
+                    humanoidRootPart.CFrame = CFrame.new(teleportAbovePosition)
+                    print(string.format("ButtonTierTeleporter (MultiTP V2): Teleporting above: %s %s", tierName, targetTeleportPart.Parent.Name))
+
+                    -- 2. Move slightly aside immediately after teleporting
+                    -- Wait a tiny moment for physics to settle from TP if needed (optional)
+                    -- task.wait()
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame + MOVE_ASIDE_OFFSET
+                    print("ButtonTierTeleporter (MultiTP V2): Moved aside.")
+
+                    -- 3. Add a short delay specifically AFTER teleporting
+                    -- This gives time for lower tiers to rebuild (Plastic->Neon flash)
+                    task.wait(POST_TELEPORT_DELAY)
+
+                    -- No 'break' here - allows checking subsequent tiers per user request
+
                  else
-                     print("ButtonTierTeleporter (MultiTP): Teleport cancelled, HumanoidRootPart lost.")
+                     print("ButtonTierTeleporter (MultiTP V2): Teleport cancelled, HumanoidRootPart lost.")
                  end
             else
-                -- Incomplete tier, but no preceding Neon button found (likely button 1 is Plastic)
-                actionTakenThisCycle = true -- Mark that we identified an active tier
-                print("ButtonTierTeleporter (MultiTP): Identified", tierName, "as incomplete (first button likely Plastic).")
-                -- << NO BREAK HERE >> -- Allows checking subsequent tiers in the same cycle
+                -- Incomplete tier, but no preceding Neon button found
+                print(string.format("ButtonTierTeleporter (MultiTP V2): Identified %s as incomplete (first button likely Plastic).", tierName))
+                -- No 'break' here
             end
 
         elseif lastButtonTouch and lastButtonTouch.Material == Enum.Material.Neon then
-             -- Tier is complete (last button is Neon), skip to the next tier
-             continue -- Continue the FOR loop to the next tier
+             -- Tier is complete, continue to the next tier
+             continue
         else
-             -- Error case (cannot determine status), skip to the next tier
-             continue -- Continue the FOR loop to the next tier
+             -- Error case, continue to the next tier
+             continue
         end
 
-    end -- End of the FOR loop iterating through tiers for THIS cycle
+    end -- End of the FOR loop iterating through tiers
 
-    -- Optional: Message if a full pass resulted in no action (likely all tiers complete)
+    -- Optional: Message if a full pass resulted in no action needed
     if not actionTakenThisCycle and isEnabled then
-         print("ButtonTierTeleporter (MultiTP): Full tier scan complete. No incomplete tiers found needing action.")
+         print("ButtonTierTeleporter (MultiTP V2): Full tier scan complete. No incomplete tiers found needing action.")
     end
 
 end -- End of main while loop
