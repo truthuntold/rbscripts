@@ -15,10 +15,10 @@ local BUTTON_TIERS = {
 
 local BUTTONS_PARENT_FOLDER_PATH = "Buttons" -- Relative path within Workspace
 local MAX_BUTTON_NUMBER_TO_CHECK = 15 -- <<<< MAKE SURE THIS IS >= HIGHEST BUTTON # (e.g., 15 for Hyper) >>>>
-local TELEPORT_OFFSET = Vector3.new(0, 5, 0) -- How high above the button to teleport
+local TELEPORT_OFFSET = Vector3.new(0, 3, 0) -- How high above the button to teleport
 local MOVE_ASIDE_OFFSET = Vector3.new(2, 0, 1) -- << How far to move sideways after TP (World X, Y, Z) >>
 local POST_TELEPORT_DELAY = 0.1 -- << Short delay AFTER teleporting to allow tier rebuild (seconds) >>
-local LOOP_DELAY = .2 -- Seconds between the START of each full tier scan
+local LOOP_DELAY = .3 -- Seconds between the START of each full tier scan
 local GUI_NAME = "ButtonTierTeleporter_MultiTP_V2" -- Unique name for the GUI (updated)
 
 -- Player Variables
