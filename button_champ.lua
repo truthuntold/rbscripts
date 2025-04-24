@@ -169,7 +169,7 @@ while true do
                     local teleportAbovePosition = targetButtonPosition + TELEPORT_OFFSET
                     humanoidRootPart.CFrame = CFrame.new(teleportAbovePosition)
                     print(string.format("ButtonTierTeleporter (MultiTP V3): Teleporting above INCOMPLETE tier's highest Neon: %s %s", tierName, targetTeleportPart.Parent.Name))
-
+                    task.wait(POST_TELEPORT_DELAY)
                     humanoidRootPart.CFrame = humanoidRootPart.CFrame + MOVE_ASIDE_OFFSET
                     print("ButtonTierTeleporter (MultiTP V3): Moved aside.")
                     task.wait(POST_TELEPORT_DELAY)
