@@ -80,7 +80,7 @@ local function teleportSequence()
                     end
                 end
             end
-            task.wait(0.2)
+            task.wait(0.4)
         end
     end
 end
