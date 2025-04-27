@@ -2,7 +2,6 @@
 -- Place this in StarterPlayerScripts or a LocalScript under StarterGui
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local guiName = "TeleportSaverGui"
 
@@ -65,13 +64,12 @@ loopButton.Position = UDim2.new(0, 5, 0, 5 + 5 * 45)
 loopButton.Parent = frame
 
 local looping = false
-local loopConnection
+local loopThread = nil
 
-local function startLoop()
-    loopConnection = RunService.Heartbeat:Connect(function()
-        -- Teleport through saved positions in sequence
+local function teleportSequence()
+    while looping do
         for i = 1, 5 do
-            if not looping then break end
+            if not looping then return end
             local cf = savedPositions[i]
             if cf then
                 local char = player.Character
@@ -82,15 +80,8 @@ local function startLoop()
                     end
                 end
             end
-            wait(0.1)
+            task.wait(0.1)
         end
-    end)
-end
-
-local function stopLoop()
-    if loopConnection then
-        loopConnection:Disconnect()
-        loopConnection = nil
     end
 end
 
@@ -98,9 +89,10 @@ loopButton.MouseButton1Click:Connect(function()
     looping = not looping
     if looping then
         loopButton.Text = "Stop Loop"
-        startLoop()
+        -- start teleport coroutine
+        loopThread = task.spawn(teleportSequence)
     else
         loopButton.Text = "Start Loop"
-        stopLoop()
+        -- stopping the loopSequence by toggling looping to false
     end
 end)
