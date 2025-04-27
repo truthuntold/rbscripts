@@ -43,7 +43,7 @@ local function createSaveButton(index)
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
-                savedPositions[index] = hrp.CFrame
+                savedPositions[index] = hrp.CFrame + Vector3.new(0, 1, 0)
                 button.BackgroundColor3 = Color3.new(0, 1, 0) -- indicate saved
             end
         end
@@ -80,7 +80,7 @@ local function teleportSequence()
                     end
                 end
             end
-            task.wait(0.1)
+            task.wait(0.2)
         end
     end
 end
